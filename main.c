@@ -54,7 +54,8 @@ void update_transmog_stats(Transmog *mog);
 
 gb_internal Transmog
 make_transmog(Transmog_Type type) {
-	Transmog mog = {0};
+	Transmog mog;
+	gb_zero_struct(&mog);
 	mog.type = type;
 	mog.shift_level = 1;
 
@@ -300,7 +301,7 @@ change_to_battle_mode(Battle_Type type)
 	game.battle_mode.player_mog = &game.player.my_transmog;
 
 	if (type == BATTLE_TYPE_GRASS) {
-		game.battle_mode.enemy_mog = make_transmog(gb_random_range_int(TRANSMOG_TYPE_LINE, TRANSMOG_TYPE_HEXAGON));
+		game.battle_mode.enemy_mog = make_transmog(cast(Transmog_Type)gb_random_range_int(TRANSMOG_TYPE_LINE, TRANSMOG_TYPE_HEXAGON));
 	} else {
 		game.battle_mode.enemy_mog = make_transmog(TRANSMOG_TYPE_SPHERE);
 	}
@@ -627,26 +628,23 @@ step(void)
 					x = i*TILE_SIZE;
 					tile_rect = rect_make_size(x, y, TILE_SIZE, TILE_SIZE);
 
-					if (t == 'Q' && game.has_chosen_transmog) {
-						map->tiles[j][i] = ' ';
-						t = map->tiles[j][i];
-					}
-
 					if (gb_char_is_digit(t)) {
 						if (rect_collides(player_rect, tile_rect, NULL)) {
 							change_map_to(t-'0');
 							return;
 						}
 					}
-					if (t != ' ' && t != '.' && t != 'g') {
+					if ((t != ' ' && t != '.' && t != 'g')) {
 						Rect inter;
 						if (t == 'L') { // NOTE(bill): Lab Chemicals Top
 							tile_rect = rect_make_size(x, y+7, TILE_SIZE, TILE_SIZE-7);
 						}
 
-						if (rect_collides(player_rect, tile_rect, &inter)) {
-							game.player.pos = old_player_pos;
-							game.player.is_moving = false;
+						if (t == 'Q' && !game.has_chosen_transmog) {
+							if (rect_collides(player_rect, tile_rect, &inter)) {
+								game.player.pos = old_player_pos;
+								game.player.is_moving = false;
+							}
 						}
 					}
 
@@ -681,7 +679,7 @@ step(void)
 						}
 					}
 
-					if (t == 'Q') {
+					if (t == 'Q' && !game.has_chosen_transmog) {
 						set_tooltip(x, y, 1.5f,
 						            "It's dangerous to go alone",
 						            "in there! You might get hurt.",
@@ -742,7 +740,8 @@ step(void)
 					draw_sprite(x, y, sx, sy, 0);
 
 					if (t == 'g') draw_sprite(x, y, 2, 1, 0); // grass
-					if (t == 'Q') draw_sprite(x, y, 0, 3, 0); // Person in the way
+					if (t == 'Q' && !game.has_chosen_transmog)
+						draw_sprite(x, y, 0, 3, 0); // Person in the way
 					if (t == 'D') draw_sprite(x, y, 1, 3, 0); // Dr.
 					if (t == 'Y') draw_sprite(x, y, 2, 3, 0); // Yugi
 				} break;

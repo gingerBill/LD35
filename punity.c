@@ -113,7 +113,7 @@ file_read(const char *path, isize *size)
         *size = ftell(f);
         fseek(f, 0L, SEEK_SET);
 
-        ptr = malloc(*size + 1);
+        ptr = (u8 *)malloc(*size + 1);
         read = fread(ptr, 1, *size, f);
         fclose(f);
         ASSERT(read == *size);
@@ -208,7 +208,7 @@ inline void
 bank_init(Bank *stack, u32 capacity)
 {
     ASSERT(stack);
-    stack->begin = stack->it = virtual_alloc(0, capacity);
+    stack->begin = stack->it = (u8 *)virtual_alloc(0, capacity);
     ASSERT(stack->begin);
     stack->end = stack->begin + capacity;
 }
@@ -235,7 +235,7 @@ bank_pop(Bank *stack, void *ptr)
     ASSERT(stack);
     ASSERT(stack->begin);
     ASSERT((u8 *)ptr >= stack->begin && (u8 *)ptr <= stack->it);
-    stack->it = ptr;
+    stack->it = (u8 *)ptr;
 }
 
 inline BankState
@@ -445,12 +445,12 @@ bitmap_init(Bitmap *bitmap, i32 width, i32 height, void *pixels, int bpp)
     bitmap->width = width;
     bitmap->height = height;
 
-    bitmap->pixels = bank_push(CORE->storage, size);
+    bitmap->pixels = (u8 *)bank_push(CORE->storage, size);
     if (pixels) {
         if (bpp == BITMAP_32) {
             Color pixel;
             Color *pixels_end = ((Color *)pixels) + size;
-            Color *pixels_it = pixels;
+            Color *pixels_it = (Color *)pixels;
 
             u8 *it = bitmap->pixels;
             u8 ix;
@@ -528,7 +528,7 @@ bitmap_load_resource(Bitmap *bitmap, const char *resource_name)
     ptr = resource_get(resource_name, &size);
 
     ASSERT(ptr);
-    pixels = (Color *)stbi_load_from_memory(ptr, (int)size, &width, &height, &comp, STBI_rgb_alpha);
+    pixels = (Color *)stbi_load_from_memory((u8 *)ptr, (int)size, &width, &height, &comp, STBI_rgb_alpha);
     ASSERT(pixels);
     ASSERT(comp == 4);
 
@@ -659,7 +659,7 @@ punp_sound_load_stbv(Sound *sound, stb_vorbis *stream)
     sound->volume = PUNP_SOUND_DEFAULT_SOUND_VOLUME;
     sound->rate = info.sample_rate;
     sound->samples_count = stb_vorbis_stream_length_in_samples(stream);
-    sound->samples = bank_push(CORE->storage, PUNP_SOUND_SAMPLES_TO_BYTES(sound->samples_count));
+    sound->samples = (i16 *)bank_push(CORE->storage, PUNP_SOUND_SAMPLES_TO_BYTES(sound->samples_count));
 
     {
         static i16 buffer[1024];
@@ -707,7 +707,7 @@ sound_load_resource(Sound *sound, const char *resource_name)
     resource_data = resource_get(resource_name, &resource_size);
     ASSERT(resource_data);
 
-    stream = stb_vorbis_open_memory(resource_data, resource_size,
+    stream = stb_vorbis_open_memory((u8 *)resource_data, resource_size,
                                     &error, 0);
 
     ASSERT(!error && stream);
@@ -734,7 +734,7 @@ sound_play(Sound *sound)
     PunPAudioSource *source = NULL;
     if (punp_audio_source_pool == 0) {
         // Pool is empty, therefore we must allocate a new source.
-        source = bank_push(CORE->storage, sizeof(PunPAudioSource));
+        source = (PunPAudioSource *)bank_push(CORE->storage, sizeof(PunPAudioSource));
         // printf("Allocating audio source.\n");
     } else {
         // We have something in the pool.
@@ -781,8 +781,8 @@ punp_sound_mix(i16 *buffer, isize samples_count)
     BankState bank_state = bank_begin(CORE->stack);
 
     isize size =  samples_count * sizeof(f32);
-    f32 *channel0 = bank_push(CORE->stack, size);
-    f32 *channel1 = bank_push(CORE->stack, size);
+    f32 *channel0 = (f32 *)bank_push(CORE->stack, size);
+    f32 *channel1 = (f32 *)bank_push(CORE->stack, size);
 
     f32 *it0, *it1;
     isize i;
@@ -1150,12 +1150,12 @@ punp_win32_sound_step(void)
         return;
     }
 
-    punp_sound_mix(range1, PUNP_SOUND_BYTES_TO_SAMPLES(range1_size));
+    punp_sound_mix((i16 *)range1, PUNP_SOUND_BYTES_TO_SAMPLES(range1_size));
 #if PUNP_SOUND_DEBUG_FILE
     punp_win32_write_audio_buf("range1", range1, range1_size);
 #endif
     if (range2) {
-        punp_sound_mix(range2, PUNP_SOUND_BYTES_TO_SAMPLES(range2_size));
+        punp_sound_mix((i16 *)range2, PUNP_SOUND_BYTES_TO_SAMPLES(range2_size));
 #if PUNP_SOUND_DEBUG_FILE
         punp_win32_write_audio_buf("range2", range2, range2_size);
 #endif
@@ -1289,7 +1289,7 @@ WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int sho
     window_bmi.bmiHeader.biBitCount = 32;
     window_bmi.bmiHeader.biCompression = BI_RGB;
 
-    window_buffer = bank_push(CORE->stack, (CANVAS_WIDTH * 4) * CANVAS_HEIGHT);
+    window_buffer = (u32 *)bank_push(CORE->stack, (CANVAS_WIDTH * 4) * CANVAS_HEIGHT);
     ASSERT(window_buffer);
 
     // Sound
