@@ -1,0 +1,4 @@
+icon.ico ICON "res\\icon.ico"
+spritesheet.png RESOURCE "res\\spritesheet.png"
+title_screen.png RESOURCE "res\\title_screen.png"
+font.png RESOURCE "res\\font.png"
