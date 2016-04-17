@@ -634,16 +634,19 @@ step(void)
 					}
 					if ((t != ' ' && t != '.' && t != 'g')) {
 						Rect inter;
+						b32 do_collision = true;
 						if (t == 'L') { // NOTE(bill): Lab Chemicals Top
 							tile_rect = rect_make_size(x, y+7, TILE_SIZE, TILE_SIZE-7);
 						}
 
-						if (t == 'Q' && !game.has_chosen_transmog) {
-							if (rect_collides(player_rect, tile_rect, &inter)) {
-								game.player.pos = old_player_pos;
-								game.player.is_moving = false;
-							}
+						if (t == 'Q' && game.has_chosen_transmog) {
+							do_collision = false;
 						}
+						if (do_collision && rect_collides(player_rect, tile_rect, &inter)) {
+							game.player.pos = old_player_pos;
+							game.player.is_moving = false;
+						}
+
 					}
 
 
