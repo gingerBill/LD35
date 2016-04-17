@@ -15,6 +15,7 @@
 
 	I hope you had fun playing the game and have "fun" reading this game.
  */
+#define RELEASE_BUILD
 #include "punity.c"
 
 #define GB_IMPLEMENTATION
@@ -99,14 +100,14 @@ make_transmog(Transmog_Type type) {
 }
 
 
-gb_inline void
+void
 update_transmog_stats(Transmog *mog) {
 	mog->max_health   += (mog->shift_level-1);
 	mog->attack_power += (mog->shift_level-1);
 }
 
 
-gb_inline char const *
+char const *
 transmog_name(Transmog_Type type)
 {
 	switch (type) {
@@ -432,9 +433,6 @@ init(void)
 	font.char_width = 4;
 	font.char_height = 7;
 
-	{i32 i; for (i = 0; i < CORE->palette.colors_count; i++) {
-		printf("%08x\n", CORE->palette.colors[i]);
-	}}
 
 	CORE->font = &font;
 
@@ -445,16 +443,16 @@ init(void)
 #endif
 }
 
-gb_inline gb_internal void
+gb_internal void
 draw_sprite_size(i32 x, i32 y, i32 sx, i32 sy, i32 w, i32 h, u32 flags)
 {
 	Rect r = rect_make_size(sx*TILE_SIZE, sy*TILE_SIZE, w*TILE_SIZE, h*TILE_SIZE);
 	bitmap_draw(x, y, 0, 0, &spritesheet, &r, flags, 0);
 }
 
-gb_inline void draw_sprite(i32 x, i32 y, i32 sx, i32 sy, u32 flags) { draw_sprite_size(x, y, sx, sy, 1, 1, flags); }
+void draw_sprite(i32 x, i32 y, i32 sx, i32 sy, u32 flags) { draw_sprite_size(x, y, sx, sy, 1, 1, flags); }
 
-gb_inline gb_internal void
+gb_internal void
 move_game_camera(Map *map)
 {
 	i32 canvas_mid_x = (CANVAS_WIDTH -TILE_SIZE)/2;
@@ -488,7 +486,7 @@ move_game_camera(Map *map)
 	}
 }
 
-gb_inline void
+void
 draw_message_box(char *line1, char *line2, char *line3)
 {
 	i32 i, w = CANVAS_WIDTH, h = CANVAS_HEIGHT;
@@ -637,7 +635,6 @@ step(void)
 					if (gb_char_is_digit(t)) {
 						if (rect_collides(player_rect, tile_rect, NULL)) {
 							change_map_to(t-'0');
-							printf("Changed to map index %c\n", t);
 							return;
 						}
 					}
@@ -1080,7 +1077,6 @@ step(void)
 
 					if (key_pressed(KEY_Z)) {
 						i32 damage = gb_clamp(0, player_mog->attack_power/3 + level_diff/2, 1000);
-						printf("%d\n", damage);
 						enemy_mog->health -= damage;
 
 						game.battle_mode.fighting_state = FIGHTING_STATE_NEXT_TURN;
@@ -1094,7 +1090,6 @@ step(void)
 
 					if (key_pressed(KEY_Z)) {
 						i32 damage = gb_clamp(0, player_mog->attack_power/1 + level_diff/2, 1000);
-						printf("%d\n", damage);
 						enemy_mog->health -= damage;
 						game.battle_mode.fighting_state = FIGHTING_STATE_NEXT_TURN;
 						game.battle_mode.state_index = 0;
@@ -1272,7 +1267,7 @@ step(void)
 
 				if (key_pressed(KEY_Z)) {
 					i32 damage = gb_clamp(0, enemy_mog->attack_power/6.0f - level_diff/3.0f, 1000);
-					printf("%d\n", damage);
+
 					player_mog->health -= damage;
 
 					game.battle_mode.fighting_state = FIGHTING_STATE_NEXT_TURN;
@@ -1287,7 +1282,7 @@ step(void)
 
 				if (key_pressed(KEY_Z)) {
 					i32 damage = gb_clamp(0, enemy_mog->attack_power/3.0f - level_diff/2.0f, 1000);
-					printf("%d\n", damage);
+
 					player_mog->health -= damage;
 
 					game.battle_mode.fighting_state = FIGHTING_STATE_NEXT_TURN;
