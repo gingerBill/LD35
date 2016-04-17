@@ -1382,9 +1382,12 @@ gb_thread_current_id(void)
 {
 	u32 thread_id;
 #if defined(GB_SYSTEM_WINDOWS)
-	u8 *thread_local_storage = cast(u8 *)__readgsqword(0x30);
-	thread_id = *cast(u32 *)(thread_local_storage + 0x48);
-
+	#if defined(GB_ARCH_64_BIT)
+		u8 *thread_local_storage = cast(u8 *)__readgsqword(0x30);
+		thread_id = *cast(u32 *)(thread_local_storage + 0x48);
+	#else
+		return 0; // IMPORTANT TOD0(bill): Get it working for WIN32 x86
+	#endif
 #elif defined(GB_SYSTEM_OSX) && defined(GB_ARCH_64_BIT)
 	asm("mov %%gs:0x00,%0" : "=r"(thread_id));
 #elif defined(GB_ARCH_32_BIT)

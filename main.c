@@ -549,9 +549,7 @@ draw_big_transmog(i32 x, i32 y, Transmog_Type type)
 void
 step(void)
 {
-	// if (key_pressed(KEY_Z)) {
-		// sound_play(&sound1);
-	// }
+
 
 	if (key_pressed(KEY_ESCAPE)) {
 		CORE->running = 0;

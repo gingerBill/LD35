@@ -843,6 +843,7 @@ punp_sound_mix(i16 *buffer, isize samples_count)
 
 // #define MIX_CLIP_(in, clip) (0.5 * (abs(in + clip) - abs(in - clip)) * CORE->audio_volume)
 
+#if 0
     // Make sure sound buffer is not empty
     if (sound) {
         i16 *it_buffer = buffer;
@@ -859,6 +860,7 @@ punp_sound_mix(i16 *buffer, isize samples_count)
             *it_buffer++ = (i16)clamp(s2, -32768, 32767);
         }
     }
+#endif
 // #undef MIX_CLIP_
 
     bank_end(&bank_state);
